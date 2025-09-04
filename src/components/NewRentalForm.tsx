@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useData } from '../context/DataContext';
-import type { Customer, Rental, Vehicle } from '../types';
+import type { Customer, Rental } from '../types';
 import { Button, Input, Select } from './ui';
 
 interface NewRentalFormProps {
