@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useData } from '../context/DataContext';
-// FIX: Corrected import path for types to be relative to the 'src' directory
 import type { Customer, Rental, Vehicle } from '../types';
 import { Button, Input, Select } from './ui';
 
@@ -11,12 +10,10 @@ interface NewRentalFormProps {
 
 const getFormattedCurrentDateTime = () => {
     const now = new Date();
-    const year = now.getFullYear();
-    const month = (now.getMonth() + 1).toString().padStart(2, '0');
-    const day = now.getDate().toString().padStart(2, '0');
-    const hours = now.getHours().toString().padStart(2, '0');
-    const minutes = now.getMinutes().toString().padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
+    // Offset for local timezone
+    const timezoneOffset = now.getTimezoneOffset() * 60000;
+    const localISOTime = (new Date(now.getTime() - timezoneOffset)).toISOString().slice(0, 16);
+    return localISOTime;
 };
 
 const NewRentalForm: React.FC<NewRentalFormProps> = ({ onSave, onCancel }) => {

@@ -5,7 +5,6 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { useData } from '../context/DataContext';
 import NewRentalForm from './NewRentalForm';
 import ContractView from './ContractView';
-// FIX: Corrected import path for types to be relative to the 'src' directory
 import type { Rental, Vehicle } from '../types';
 
 interface StatCardProps {
@@ -55,13 +54,13 @@ const Dashboard: React.FC = () => {
         const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
         
         const stkSoon = vehicles.filter(v => {
-            const stkDate = new Date(v.stkDate);
-            return stkDate <= thirtyDaysFromNow && stkDate >= now;
+            const stkDate = v.stkDate ? new Date(v.stkDate) : null;
+            return stkDate && stkDate <= thirtyDaysFromNow && stkDate >= now;
         });
 
         const vignetteSoon = vehicles.filter(v => {
-            const vignetteDate = new Date(v.vignetteUntil);
-            return vignetteDate <= thirtyDaysFromNow && vignetteDate >= now;
+            const vignetteDate = v.vignetteUntil ? new Date(v.vignetteUntil) : null;
+            return vignetteDate && vignetteDate <= thirtyDaysFromNow && vignetteDate >= now;
         });
         
         const isSameDay = (d1: Date, d2: Date) => d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth() && d1.getDate() === d2.getDate();
@@ -116,10 +115,10 @@ const Dashboard: React.FC = () => {
                                 return vehicle && <AttentionItem key={`ret-${rental.id}`} vehicle={vehicle} reason="Vrátit dnes" date={rental.endDate} />
                             })}
                              {attentionItems.stkSoon.length > 0 && attentionItems.stkSoon.map(vehicle => (
-                                <AttentionItem key={`stk-${vehicle.id}`} vehicle={vehicle} reason="Končí STK" date={vehicle.stkDate} />
+                                vehicle.stkDate && <AttentionItem key={`stk-${vehicle.id}`} vehicle={vehicle} reason="Končí STK" date={vehicle.stkDate} />
                             ))}
                             {attentionItems.vignetteSoon.length > 0 && attentionItems.vignetteSoon.map(vehicle => (
-                                <AttentionItem key={`vig-${vehicle.id}`} vehicle={vehicle} reason="Končí dálniční známka" date={vehicle.vignetteUntil} />
+                                vehicle.vignetteUntil && <AttentionItem key={`vig-${vehicle.id}`} vehicle={vehicle} reason="Končí dálniční známka" date={vehicle.vignetteUntil} />
                             ))}
                              {attentionItems.stkSoon.length === 0 && attentionItems.vignetteSoon.length === 0 && attentionItems.returningToday.length === 0 && (
                                 <p className="text-text-secondary">Žádné nadcházející události nevyžadují pozornost.</p>

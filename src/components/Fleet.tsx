@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-// FIX: Corrected import path for types to be relative to the 'src' directory
 import type { Vehicle } from '../types';
 import { Card, Button, Modal, Input, ConfirmModal } from './ui';
 import { EditIcon, TrashIcon, PlusIcon, CalendarIcon, WrenchIcon, ShieldCheckIcon } from './Icons';
 import { useData } from '../context/DataContext';
 
 const VehicleForm: React.FC<{ vehicle?: Vehicle; onSave: (vehicle: Vehicle) => void; onCancel: () => void; }> = ({ vehicle, onSave, onCancel }) => {
-    const [formData, setFormData] = useState<Vehicle>(vehicle || {
-        id: new Date().toISOString(),
+    const [formData, setFormData] = useState<Omit<Vehicle, 'id' | 'pricing'> & { id?: string; pricing: Vehicle['pricing'] }>(vehicle || {
         brand: 'Renault Master',
         licensePlate: '',
         vin: '',
@@ -21,18 +19,37 @@ const VehicleForm: React.FC<{ vehicle?: Vehicle; onSave: (vehicle: Vehicle) => v
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        const { name, value, type } = e.target;
+        
+        let processedValue: string | number = value;
+        if (type === 'number') {
+            processedValue = value === '' ? '' : Number(value);
+        }
+
+        setFormData(prev => ({ ...prev, [name]: processedValue }));
     };
 
     const handlePricingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, pricing: { ...prev.pricing, [name]: Number(value) } }));
+        setFormData(prev => ({ ...prev, pricing: { ...prev.pricing, [name]: value === '' ? '' : Number(value) } }));
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave(formData);
+        const finalData: Vehicle = {
+            id: vehicle?.id || `v${new Date().getTime()}`,
+            ...formData,
+            year: Number(formData.year),
+            lastServiceCost: Number(formData.lastServiceCost) || 0,
+            pricing: {
+                '4h': Number(formData.pricing['4h']) || 0,
+                '6h': Number(formData.pricing['6h']) || 0,
+                '12h': Number(formData.pricing['12h']) || 0,
+                '24h': Number(formData.pricing['24h']) || 0,
+                daily: Number(formData.pricing.daily) || 0,
+            }
+        };
+        onSave(finalData);
     };
 
     return (
@@ -51,11 +68,11 @@ const VehicleForm: React.FC<{ vehicle?: Vehicle; onSave: (vehicle: Vehicle) => v
                  <Input label="SPZ" name="licensePlate" value={formData.licensePlate} onChange={handleChange} required />
                  <Input label="VIN" name="vin" value={formData.vin} onChange={handleChange} required />
                  <Input label="Rok výroby" name="year" type="number" value={formData.year} onChange={handleChange} required />
-                 <Input label="Poslední servis (datum)" name="lastServiceDate" type="date" value={formData.lastServiceDate} onChange={handleChange} />
-                 <Input label="Cena servisu (Kč)" name="lastServiceCost" type="number" value={formData.lastServiceCost} onChange={handleChange} />
-                 <Input label="STK do" name="stkDate" type="date" value={formData.stkDate} onChange={handleChange} />
-                 <Input label="Dálniční známka do" name="vignetteUntil" type="date" value={formData.vignetteUntil} onChange={handleChange} />
-                 <Input label="Pojištění info" name="insuranceInfo" value={formData.insuranceInfo} onChange={handleChange} className="md:col-span-2" />
+                 <Input label="Poslední servis (datum)" name="lastServiceDate" type="date" value={formData.lastServiceDate || ''} onChange={handleChange} />
+                 <Input label="Cena servisu (Kč)" name="lastServiceCost" type="number" value={formData.lastServiceCost || ''} onChange={handleChange} />
+                 <Input label="STK do" name="stkDate" type="date" value={formData.stkDate || ''} onChange={handleChange} />
+                 <Input label="Dálniční známka do" name="vignetteUntil" type="date" value={formData.vignetteUntil || ''} onChange={handleChange} />
+                 <Input label="Pojištění info" name="insuranceInfo" value={formData.insuranceInfo || ''} onChange={handleChange} className="md:col-span-2" />
             </div>
             <h3 className="text-lg font-semibold pt-4 border-t border-gray-700">Ceník (Kč)</h3>
              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -150,9 +167,9 @@ const Fleet: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="mt-4 space-y-2 text-sm">
-                                    <p className="flex items-center"><CalendarIcon className="w-4 h-4 mr-2 text-accent"/> <strong>STK do:</strong> {new Date(vehicle.stkDate).toLocaleDateString('cs-CZ')}</p>
-                                    <p className="flex items-center"><WrenchIcon className="w-4 h-4 mr-2 text-accent"/> <strong>Servis:</strong> {new Date(vehicle.lastServiceDate).toLocaleDateString('cs-CZ')}</p>
-                                    <p className="flex items-center"><ShieldCheckIcon className="w-4 h-4 mr-2 text-accent"/> <strong>Známka do:</strong> {new Date(vehicle.vignetteUntil).toLocaleDateString('cs-CZ')}</p>
+                                    {vehicle.stkDate && <p className="flex items-center"><CalendarIcon className="w-4 h-4 mr-2 text-accent"/> <strong>STK do:</strong> {new Date(vehicle.stkDate).toLocaleDateString('cs-CZ')}</p>}
+                                    {vehicle.lastServiceDate && <p className="flex items-center"><WrenchIcon className="w-4 h-4 mr-2 text-accent"/> <strong>Servis:</strong> {new Date(vehicle.lastServiceDate).toLocaleDateString('cs-CZ')}</p>}
+                                    {vehicle.vignetteUntil && <p className="flex items-center"><ShieldCheckIcon className="w-4 h-4 mr-2 text-accent"/> <strong>Známka do:</strong> {new Date(vehicle.vignetteUntil).toLocaleDateString('cs-CZ')}</p>}
                                 </div>
                             </div>
                             <div className="mt-4 pt-4 border-t border-gray-700 text-right">

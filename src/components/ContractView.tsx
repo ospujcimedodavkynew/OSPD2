@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react';
 import { Modal, Button } from './ui';
-// FIX: Corrected import path for types to be relative to the 'src' directory
 import type { Rental, Vehicle, Customer } from '../types';
 import { PrinterIcon, PenToolIcon, QrCodeIcon } from './Icons';
 import SignaturePad, { SignaturePadRef } from './SignaturePad';
@@ -99,27 +98,26 @@ const ContractView: React.FC<ContractViewProps> = ({ rental, vehicle, customer, 
         const printWindow = window.open(windowUrl, windowName, 'left=50000,top=50000,width=0,height=0');
         if (printWindow && printContent) {
             printWindow.document.write('<html><head><title>Smlouva o pronájmu</title>');
-            printWindow.document.write('<script src="https://cdn.tailwindcss.com"><\/script>');
+            printWindow.document.write('<link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">');
             printWindow.document.write('</head><body class="bg-white text-black p-8">');
             printWindow.document.write(printContent.innerHTML);
             printWindow.document.write('</body></html>');
             printWindow.document.close();
             printWindow.focus();
-            printWindow.print();
-            printWindow.close();
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 250);
         }
     }
 
     const generateQrCodeUrl = () => {
         if (!bankAccountNumber) return '';
         
-        // Remove spaces from IBAN to ensure compatibility
         const cleanBankAccountNumber = bankAccountNumber.replace(/\s/g, '');
         
-        // Correct SPAYD format with colons separating keys and values
         const spaydString = `SPD*1.0*ACC:${cleanBankAccountNumber}*AM:${rental.totalPrice.toFixed(2)}*CC:CZK*X-VS:${rental.id.replace(/\D/g, '').slice(0, 10)}*MSG:PRONAJEM-${vehicle.licensePlate}`;
         
-        // The final payload needs to be URL encoded for the QR code generation API
         const encodedSpayd = encodeURIComponent(spaydString);
         
         return `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodedSpayd}`;
@@ -127,54 +125,56 @@ const ContractView: React.FC<ContractViewProps> = ({ rental, vehicle, customer, 
 
     return (
         <Modal isOpen={true} onClose={onClose} title={`Smlouva o pronájmu #${rental.id.slice(0, 5)}`}>
-            <div id="contract-content" ref={contractContentRef} className="prose prose-invert max-w-none prose-sm text-text-secondary">
-                <h2 className="text-center text-xl font-bold text-text-primary">Smlouva o nájmu dopravního prostředku</h2>
-                
-                <h3 className="text-lg font-semibold text-text-primary mt-4">1. Smluvní strany</h3>
-                <p><strong>Pronajímatel:</strong> Milan Gula, Ghegova 1019/1, Nové sady, Brno, 60200, IČO: 07031653</p>
-                <p><strong>Nájemce:</strong> {customer.firstName} {customer.lastName}, Tel: {customer.phone}, Email: {customer.email}</p>
-                <p>Číslo OP: {customer.idCardNumber}, Číslo ŘP: {customer.driversLicenseNumber}</p>
-                
-                <h3 className="text-lg font-semibold text-text-primary mt-4">2. Předmět nájmu</h3>
-                <p><strong>Vozidlo:</strong> {vehicle.brand}</p>
-                <p><strong>SPZ:</strong> {vehicle.licensePlate}</p>
-                <p><strong>VIN:</strong> {vehicle.vin}</p>
-                
-                <h3 className="text-lg font-semibold text-text-primary mt-4">3. Doba nájmu a cena</h3>
-                <p><strong>Začátek nájmu:</strong> {new Date(rental.startDate).toLocaleString('cs-CZ')}</p>
-                <p><strong>Konec nájmu:</strong> {new Date(rental.endDate).toLocaleString('cs-CZ')}</p>
-                <p><strong>Celková cena:</strong> {new Intl.NumberFormat('cs-CZ', { style: 'currency', currency: 'CZK' }).format(rental.totalPrice)}</p>
+            <div id="contract-content" ref={contractContentRef} className="prose prose-sm max-w-none prose-p:my-1 prose-headings:mb-2 prose-headings:mt-4 text-text-secondary">
+                <div style={{ fontFamily: 'sans-serif', color: '#000' }}>
+                    <h2 className="text-center text-xl font-bold text-text-primary">Smlouva o nájmu dopravního prostředku</h2>
+                    
+                    <h3 className="text-lg font-semibold text-text-primary">1. Smluvní strany</h3>
+                    <p><strong>Pronajímatel:</strong> Milan Gula, Ghegova 1019/1, Nové sady, Brno, 60200, IČO: 07031653</p>
+                    <p><strong>Nájemce:</strong> {customer.firstName} {customer.lastName}, Tel: {customer.phone}, Email: {customer.email}</p>
+                    <p>Číslo OP: {customer.idCardNumber}, Číslo ŘP: {customer.driversLicenseNumber}</p>
+                    
+                    <h3 className="text-lg font-semibold text-text-primary">2. Předmět nájmu</h3>
+                    <p><strong>Vozidlo:</strong> {vehicle.brand}</p>
+                    <p><strong>SPZ:</strong> {vehicle.licensePlate}</p>
+                    <p><strong>VIN:</strong> {vehicle.vin}</p>
+                    
+                    <h3 className="text-lg font-semibold text-text-primary">3. Doba nájmu a cena</h3>
+                    <p><strong>Začátek nájmu:</strong> {new Date(rental.startDate).toLocaleString('cs-CZ')}</p>
+                    <p><strong>Konec nájmu:</strong> {new Date(rental.endDate).toLocaleString('cs-CZ')}</p>
+                    <p><strong>Celková cena:</strong> {new Intl.NumberFormat('cs-CZ', { style: 'currency', currency: 'CZK' }).format(rental.totalPrice)}</p>
 
-                <h3 className="text-lg font-semibold text-text-primary mt-4">4. Práva a povinnosti</h3>
-                <p>Nájemce se zavazuje používat vozidlo s péčí řádného hospodáře. Vozidlo nesmí být použito k páchání trestné činnosti. Nájemce je plně odpovědný za veškeré pokuty a sankce vzniklé během doby pronájmu.</p>
+                    <h3 className="text-lg font-semibold text-text-primary">4. Práva a povinnosti</h3>
+                    <p>Nájemce se zavazuje používat vozidlo s péčí řádného hospodáře. Vozidlo nesmí být použito k páchání trestné činnosti. Nájemce je plně odpovědný za veškeré pokuty a sankce vzniklé během doby pronájmu.</p>
 
-                <h3 className="text-lg font-semibold text-text-primary mt-4">5. Spoluúčast a pojištění</h3>
-                <p>Vozidlo je havarijně pojištěno. V případě zaviněné nehody nebo poškození vozidla nájemcem je spoluúčast stanovena na <strong>5.000 Kč - 10.000 Kč</strong> podle rozsahu poškození.</p>
+                    <h3 className="text-lg font-semibold text-text-primary">5. Spoluúčast a pojištění</h3>
+                    <p>Vozidlo je havarijně pojištěno. V případě zaviněné nehody nebo poškození vozidla nájemcem je spoluúčast stanovena na <strong>5.000 Kč - 10.000 Kč</strong> podle rozsahu poškození.</p>
 
-                <h3 className="text-lg font-semibold text-text-primary mt-4">6. Závěrečná ustanovení</h3>
-                <p>Tato smlouva je vyhotovena ve dvou exemplářích, z nichž každá strana obdrží jeden. Nájemce svým podpisem stvrzuje, že se seznámil s podmínkami a souhlasí s nimi.</p>
-                
-                <div className="flex justify-between items-end mt-8 pt-8 border-t border-gray-600">
-                    <div className="text-center">
-                         <p className="font-serif italic text-xl text-text-primary h-16 flex items-center justify-center">Milan Gula</p>
-                        <p className="border-t-2 border-dotted border-gray-500 w-48 pt-1">Podpis pronajímatele</p>
-                    </div>
-                    <div className="signature-block">
-                        {signatureDataUrl ? (
-                            <div className="text-center">
-                                <img src={signatureDataUrl} alt="Podpis zákazníka" className="h-16 w-auto bg-gray-200 p-1 rounded-md inline-block" />
-                                <p className="border-t-2 border-dotted border-gray-500 w-48 text-center mt-1 pt-1">Podpis nájemce</p>
-                            </div>
-                        ) : (
-                             <div>
-                                <p className="text-sm text-accent mb-2 flex items-center"><PenToolIcon className="w-4 h-4 mr-2" /> Prosím, podepište se níže:</p>
-                                <SignaturePad ref={signaturePadRef} />
-                                <div className="flex gap-2 mt-2 justify-end">
-                                    <Button type="button" variant="secondary" onClick={handleClearSignature}>Vymazat</Button>
-                                    <Button type="button" onClick={handleConfirmSignature}>Potvrdit podpis</Button>
+                    <h3 className="text-lg font-semibold text-text-primary">6. Závěrečná ustanovení</h3>
+                    <p>Tato smlouva je vyhotovena ve dvou exemplářích, z nichž každá strana obdrží jeden. Nájemce svým podpisem stvrzuje, že se seznámil s podmínkami a souhlasí s nimi.</p>
+                    
+                    <div className="flex justify-between items-end mt-8 pt-8 border-t border-gray-600">
+                        <div className="text-center">
+                            <p className="font-serif italic text-xl h-16 flex items-center justify-center">Milan Gula</p>
+                            <p className="border-t-2 border-dotted w-48 pt-1">Podpis pronajímatele</p>
+                        </div>
+                        <div className="signature-block">
+                            {signatureDataUrl ? (
+                                <div className="text-center">
+                                    <img src={signatureDataUrl} alt="Podpis zákazníka" className="h-16 w-auto bg-gray-200 p-1 rounded-md inline-block" />
+                                    <p className="border-t-2 border-dotted w-48 text-center mt-1 pt-1">Podpis nájemce</p>
                                 </div>
-                            </div>
-                        )}
+                            ) : (
+                                <div>
+                                    <p className="text-sm text-accent mb-2 flex items-center not-prose"><PenToolIcon className="w-4 h-4 mr-2" /> Prosím, podepište se níže:</p>
+                                    <SignaturePad ref={signaturePadRef} />
+                                    <div className="flex gap-2 mt-2 justify-end not-prose">
+                                        <Button type="button" variant="secondary" onClick={handleClearSignature}>Vymazat</Button>
+                                        <Button type="button" onClick={handleConfirmSignature}>Potvrdit podpis</Button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
