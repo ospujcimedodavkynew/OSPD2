@@ -1,9 +1,11 @@
 
+
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { Card, Button } from './ui';
 import ContractView from './ContractView';
-import type { Rental } from '../types';
+// FIX: Corrected import path for types from '../types' to '../src/types'
+import type { Rental } from '../src/types';
 
 const CalendarView: React.FC = () => {
   const { vehicles, rentals, customers } = useData();

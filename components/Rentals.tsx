@@ -1,6 +1,8 @@
 
+
 import React, { useState } from 'react';
-import type { Rental, Vehicle, Customer } from '../types';
+// FIX: Corrected import path for types from '../types' to '../src/types'
+import type { Rental, Vehicle, Customer } from '../src/types';
 import { Card, Button } from './ui';
 import ContractView from './ContractView';
 import { useData } from '../context/DataContext';

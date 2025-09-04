@@ -1,7 +1,9 @@
 
+
 import React, { useState, useRef } from 'react';
 import { Modal, Button } from './ui';
-import type { Rental, Vehicle, Customer } from '../types';
+// FIX: Corrected import path for types from '../types' to '../src/types'
+import type { Rental, Vehicle, Customer } from '../src/types';
 import { PrinterIcon, PenToolIcon, QrCodeIcon } from './Icons';
 import SignaturePad, { SignaturePadRef } from './SignaturePad';
 import { useData } from '../context/DataContext';

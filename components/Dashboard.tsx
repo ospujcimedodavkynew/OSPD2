@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { Card, Button, Modal } from './ui';
 import { TruckIcon, UsersIcon, CheckCircleIcon, UserPlusIcon, AlertTriangleIcon } from './Icons';
@@ -6,7 +7,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { useData } from '../context/DataContext';
 import NewRentalForm from './NewRentalForm';
 import ContractView from './ContractView';
-import type { Rental, Vehicle } from '../types';
+// FIX: Corrected import path for types from '../types' to '../src/types'
+import type { Rental, Vehicle } from '../src/types';
 
 interface StatCardProps {
     title: string;

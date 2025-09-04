@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, ReactNode } from 'react';
-import type { Vehicle, Customer, Rental, ToastMessage } from '../types';
+// FIX: Corrected import path for types from '../types' to '../src/types'
+import type { Vehicle, Customer, Rental, ToastMessage } from '../src/types';
 import { mockVehicles, mockCustomers, mockRentals } from '../data/mockData';
 
 interface DataContextType {

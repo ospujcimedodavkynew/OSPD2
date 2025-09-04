@@ -1,6 +1,8 @@
 
+
 import React, { useState } from 'react';
-import type { Vehicle } from '../types';
+// FIX: Corrected import path for types from '../types' to '../src/types'
+import type { Vehicle } from '../src/types';
 import { Card, Button, Modal, Input, ConfirmModal } from './ui';
 import { EditIcon, TrashIcon, PlusIcon, CalendarIcon, WrenchIcon, ShieldCheckIcon } from './Icons';
 import { useData } from '../context/DataContext';

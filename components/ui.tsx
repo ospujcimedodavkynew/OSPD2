@@ -1,7 +1,9 @@
 
+
 import React, { ReactNode } from 'react';
 import { useData } from '../context/DataContext';
-import type { ToastMessage } from '../types';
+// FIX: Corrected import path for types from '../types' to '../src/types'
+import type { ToastMessage } from '../src/types';
 import { CheckCircleIcon, AlertCircleIcon, InfoIcon, XIcon } from './Icons';
 
 // --- Card ---
