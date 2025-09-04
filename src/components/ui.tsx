@@ -1,5 +1,6 @@
 import React, { ReactNode } from 'react';
 import { useData } from '../context/DataContext';
+// FIX: Corrected import path for types to be relative to the 'src' directory
 import type { ToastMessage } from '../types';
 import { CheckCircleIcon, AlertCircleIcon, InfoIcon, XIcon } from './Icons';
 

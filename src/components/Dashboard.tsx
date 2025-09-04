@@ -5,6 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { useData } from '../context/DataContext';
 import NewRentalForm from './NewRentalForm';
 import ContractView from './ContractView';
+// FIX: Corrected import path for types to be relative to the 'src' directory
 import type { Rental, Vehicle } from '../types';
 
 interface StatCardProps {

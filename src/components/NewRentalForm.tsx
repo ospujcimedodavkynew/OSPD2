@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useData } from '../context/DataContext';
+// FIX: Corrected import path for types to be relative to the 'src' directory
 import type { Customer, Rental, Vehicle } from '../types';
 import { Button, Input, Select } from './ui';
 

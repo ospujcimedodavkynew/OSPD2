@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, ReactNode } from 'react';
+// FIX: Corrected import path for types to be relative to the 'src' directory.
 import type { Vehicle, Customer, Rental, ToastMessage } from '../types';
 import { mockVehicles, mockCustomers, mockRentals } from '../data/mockData';
 

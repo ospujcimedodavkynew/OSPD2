@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { Card, Button } from './ui';
 import ContractView from './ContractView';
+// FIX: Corrected import path for types to be relative to the 'src' directory
 import type { Rental } from '../types';
 
 const CalendarView: React.FC = () => {

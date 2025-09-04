@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+// FIX: Corrected import path for types to be relative to the 'src' directory
 import type { Vehicle } from '../types';
 import { Card, Button, Modal, Input, ConfirmModal } from './ui';
 import { EditIcon, TrashIcon, PlusIcon, CalendarIcon, WrenchIcon, ShieldCheckIcon } from './Icons';

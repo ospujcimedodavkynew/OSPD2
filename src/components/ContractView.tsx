@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Modal, Button } from './ui';
+// FIX: Corrected import path for types to be relative to the 'src' directory
 import type { Rental, Vehicle, Customer } from '../types';
 import { PrinterIcon, PenToolIcon, QrCodeIcon } from './Icons';
 import SignaturePad, { SignaturePadRef } from './SignaturePad';
