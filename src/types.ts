@@ -1,15 +1,14 @@
 export interface Vehicle {
   id: string;
-  created_at?: string;
   brand: 'Renault Master' | 'Opel Movano' | 'Fiat Ducato' | 'Peugeot Boxer' | 'Mercedes Sprinter';
-  license_plate: string;
+  licensePlate: string;
   vin: string;
   year: number;
-  last_service_date: string | null;
-  last_service_cost: number | null;
-  stk_date: string | null;
-  insurance_info: string | null;
-  vignette_until: string | null;
+  lastServiceDate: string;
+  lastServiceCost: number;
+  stkDate: string;
+  insuranceInfo: string;
+  vignetteUntil: string;
   pricing: {
     '4h': number;
     '6h': number;
@@ -21,23 +20,21 @@ export interface Vehicle {
 
 export interface Customer {
   id: string;
-  created_at?: string;
-  first_name: string;
-  last_name: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  phone: string | null;
-  id_card_number: string | null;
-  drivers_license_number: string | null;
+  phone: string;
+  idCardNumber: string;
+  driversLicenseNumber: string;
 }
 
 export interface Rental {
   id: string;
-  created_at?: string;
-  vehicle_id: string;
-  customer_id: string;
-  start_date: string;
-  end_date: string;
-  total_price: number;
+  vehicleId: string;
+  customerId: string;
+  startDate: string;
+  endDate: string;
+  totalPrice: number;
   status: 'active' | 'completed' | 'upcoming';
 }
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useData } from '../context/DataContext';
-import type { Customer, Rental } from '../types';
+import type { Customer, Rental, Vehicle } from '../types';
 import { Button, Input, Select } from './ui';
 
 interface NewRentalFormProps {
@@ -19,14 +19,13 @@ const getFormattedCurrentDateTime = () => {
 };
 
 const NewRentalForm: React.FC<NewRentalFormProps> = ({ onSave, onCancel }) => {
-    const { vehicles, customers, rentals, addCustomer, addRental, addToast } = useData();
+    const { vehicles, customers, rentals, setCustomers, setRentals, addToast } = useData();
     
     const [customerType, setCustomerType] = useState<'new' | 'existing'>('new');
     const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const [customer, setCustomer] = useState<Omit<Customer, 'id' | 'created_at'>>({
-        first_name: '', last_name: '', email: '', phone: '', id_card_number: '', drivers_license_number: ''
+    const [customer, setCustomer] = useState<Omit<Customer, 'id'>>({
+        firstName: '', lastName: '', email: '', phone: '', idCardNumber: '', driversLicenseNumber: ''
     });
     const [vehicleId, setVehicleId] = useState<string>('');
     const [startDate, setStartDate] = useState(getFormattedCurrentDateTime());
@@ -37,11 +36,10 @@ const NewRentalForm: React.FC<NewRentalFormProps> = ({ onSave, onCancel }) => {
         if (customerType === 'existing' && selectedCustomerId) {
             const existingCustomer = customers.find(c => c.id === selectedCustomerId);
             if (existingCustomer) {
-                const { id, created_at, ...customerData } = existingCustomer;
-                setCustomer(customerData);
+                setCustomer(existingCustomer);
             }
         } else {
-            setCustomer({ first_name: '', last_name: '', email: '', phone: '', id_card_number: '', drivers_license_number: '' });
+            setCustomer({ firstName: '', lastName: '', email: '', phone: '', idCardNumber: '', driversLicenseNumber: '' });
         }
     }, [customerType, selectedCustomerId, customers]);
 
@@ -56,10 +54,10 @@ const NewRentalForm: React.FC<NewRentalFormProps> = ({ onSave, onCancel }) => {
         if (start >= end) return new Set(vehicles.map(v => v.id));
 
         const unavailable = rentals.filter(rental => {
-            const rentalStart = new Date(rental.start_date);
-            const rentalEnd = new Date(rental.end_date);
+            const rentalStart = new Date(rental.startDate);
+            const rentalEnd = new Date(rental.endDate);
             return start < rentalEnd && end > rentalStart;
-        }).map(rental => rental.vehicle_id);
+        }).map(rental => rental.vehicleId);
         
         return new Set(unavailable);
     }, [startDate, endDate, rentals, vehicles]);
@@ -73,8 +71,8 @@ const NewRentalForm: React.FC<NewRentalFormProps> = ({ onSave, onCancel }) => {
     const isFormValid = useMemo(() => {
         const customerDetailsValid = customerType === 'existing'
             ? !!selectedCustomerId
-            : customer.first_name && customer.last_name && customer.email && customer.phone &&
-              customer.id_card_number && customer.drivers_license_number;
+            : customer.firstName && customer.lastName && customer.email && customer.phone &&
+              customer.idCardNumber && customer.driversLicenseNumber;
 
         return (
             customerDetailsValid && vehicleId &&
@@ -117,42 +115,36 @@ const NewRentalForm: React.FC<NewRentalFormProps> = ({ onSave, onCancel }) => {
 
     }, [vehicleId, startDate, endDate, vehicles]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!isFormValid) {
             addToast("Prosím, vyplňte všechna pole správně.", 'error');
             return;
         };
         
-        setIsSubmitting(true);
-        try {
-            let customerIdToUse: string;
+        let customerIdToUse: string;
 
-            if (customerType === 'new') {
-                const newCustomer = await addCustomer(customer);
-                if (!newCustomer) throw new Error("Failed to create customer");
-                customerIdToUse = newCustomer.id;
-            } else {
-                customerIdToUse = selectedCustomerId;
-            }
-
-            const newRental: Omit<Rental, 'id' | 'created_at'> = {
-                customer_id: customerIdToUse,
-                vehicle_id: vehicleId,
-                start_date: startDate,
-                end_date: endDate,
-                total_price: totalPrice,
-                status: new Date(startDate) > new Date() ? 'upcoming' : 'active',
-            };
-
-            await addRental(newRental);
-            addToast("Rezervace byla úspěšně vytvořena.", "success");
-            onSave();
-        } catch(error) {
-            // Toast is handled in context
-        } finally {
-            setIsSubmitting(false);
+        if (customerType === 'new') {
+            const newCustomer: Customer = { id: `c${new Date().getTime()}`, ...customer };
+            setCustomers(prev => [...prev, newCustomer]);
+            customerIdToUse = newCustomer.id;
+        } else {
+            customerIdToUse = selectedCustomerId;
         }
+
+        const newRental: Rental = {
+            id: `r${new Date().getTime()}`,
+            customerId: customerIdToUse,
+            vehicleId,
+            startDate,
+            endDate,
+            totalPrice,
+            status: new Date(startDate) > new Date() ? 'upcoming' : 'active',
+        };
+
+        setRentals(prev => [...prev, newRental]);
+        addToast("Rezervace byla úspěšně vytvořena.", "success");
+        onSave();
     };
 
     return (
@@ -166,18 +158,18 @@ const NewRentalForm: React.FC<NewRentalFormProps> = ({ onSave, onCancel }) => {
 
                 {customerType === 'new' ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input label="Jméno" name="first_name" value={customer.first_name} onChange={handleCustomerChange} required />
-                        <Input label="Příjmení" name="last_name" value={customer.last_name} onChange={handleCustomerChange} required />
+                        <Input label="Jméno" name="firstName" value={customer.firstName} onChange={handleCustomerChange} required />
+                        <Input label="Příjmení" name="lastName" value={customer.lastName} onChange={handleCustomerChange} required />
                         <Input label="Email" name="email" type="email" value={customer.email} onChange={handleCustomerChange} required />
-                        <Input label="Telefon" name="phone" type="tel" value={customer.phone || ''} onChange={handleCustomerChange} required />
-                        <Input label="Číslo OP" name="id_card_number" value={customer.id_card_number || ''} onChange={handleCustomerChange} required />
-                        <Input label="Číslo ŘP" name="drivers_license_number" value={customer.drivers_license_number || ''} onChange={handleCustomerChange} required />
+                        <Input label="Telefon" name="phone" type="tel" value={customer.phone} onChange={handleCustomerChange} required />
+                        <Input label="Číslo OP" name="idCardNumber" value={customer.idCardNumber} onChange={handleCustomerChange} required />
+                        <Input label="Číslo ŘP" name="driversLicenseNumber" value={customer.driversLicenseNumber} onChange={handleCustomerChange} required />
                     </div>
                 ) : (
                     <div>
                         <Select label="Vyberte zákazníka" value={selectedCustomerId} onChange={e => setSelectedCustomerId(e.target.value)} required>
                             <option value="">-- Vyberte --</option>
-                            {customers.map(c => <option key={c.id} value={c.id}>{c.first_name} {c.last_name} ({c.email})</option>)}
+                            {customers.map(c => <option key={c.id} value={c.id}>{c.firstName} {c.lastName} ({c.email})</option>)}
                         </Select>
                     </div>
                 )}
@@ -190,7 +182,7 @@ const NewRentalForm: React.FC<NewRentalFormProps> = ({ onSave, onCancel }) => {
                         {vehicles.map(v => {
                             const isUnavailable = unavailableVehicleIds.has(v.id);
                             return <option key={v.id} value={v.id} disabled={isUnavailable}>
-                                {v.brand} - {v.license_plate} {isUnavailable ? '(Obsazeno)' : ''}
+                                {v.brand} - {v.licensePlate} {isUnavailable ? '(Obsazeno)' : ''}
                             </option>
                         })}
                     </Select>
@@ -207,7 +199,7 @@ const NewRentalForm: React.FC<NewRentalFormProps> = ({ onSave, onCancel }) => {
             </div>
              <div className="flex justify-end gap-4 pt-6 border-t border-gray-700">
                 <Button type="button" variant="secondary" onClick={onCancel}>Zrušit</Button>
-                <Button type="submit" disabled={!isFormValid || isSubmitting}>{isSubmitting ? 'Ukládání...' : 'Vytvořit rezervaci a smlouvu'}</Button>
+                <Button type="submit" disabled={!isFormValid}>Vytvořit rezervaci a smlouvu</Button>
             </div>
         </form>
     );
