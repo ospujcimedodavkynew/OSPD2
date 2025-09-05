@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useData } from '../context/DataContext';
 import type { Customer, Rental } from '../types';
-import { Button, Input, Select } from './ui';
+import { Button, Input, Select, Modal } from './ui';
 
 interface NewRentalFormProps {
     onSave: () => void;
@@ -10,7 +10,6 @@ interface NewRentalFormProps {
 
 const getFormattedCurrentDateTime = () => {
     const now = new Date();
-    // Offset for local timezone
     const timezoneOffset = now.getTimezoneOffset() * 60000;
     const localISOTime = (new Date(now.getTime() - timezoneOffset)).toISOString().slice(0, 16);
     return localISOTime;
@@ -23,7 +22,7 @@ const NewRentalForm: React.FC<NewRentalFormProps> = ({ onSave, onCancel }) => {
     const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
 
     const [customer, setCustomer] = useState<Omit<Customer, 'id'>>({
-        firstName: '', lastName: '', email: '', phone: '', idCardNumber: '', driversLicenseNumber: ''
+        first_name: '', last_name: '', email: '', phone: '', id_card_number: '', drivers_license_number: ''
     });
     const [vehicleId, setVehicleId] = useState<string>('');
     const [startDate, setStartDate] = useState(getFormattedCurrentDateTime());
@@ -33,11 +32,9 @@ const NewRentalForm: React.FC<NewRentalFormProps> = ({ onSave, onCancel }) => {
     useEffect(() => {
         if (customerType === 'existing' && selectedCustomerId) {
             const existingCustomer = customers.find(c => c.id === selectedCustomerId);
-            if (existingCustomer) {
-                setCustomer(existingCustomer);
-            }
+            if (existingCustomer) setCustomer(existingCustomer);
         } else {
-            setCustomer({ firstName: '', lastName: '', email: '', phone: '', idCardNumber: '', driversLicenseNumber: '' });
+            setCustomer({ first_name: '', last_name: '', email: '', phone: '', id_card_number: '', drivers_license_number: '' });
         }
     }, [customerType, selectedCustomerId, customers]);
 
@@ -61,69 +58,42 @@ const NewRentalForm: React.FC<NewRentalFormProps> = ({ onSave, onCancel }) => {
     }, [startDate, endDate, rentals, vehicles]);
 
     useEffect(() => {
-        if (vehicleId && unavailableVehicleIds.has(vehicleId)) {
-            setVehicleId('');
-        }
+        if (vehicleId && unavailableVehicleIds.has(vehicleId)) setVehicleId('');
     }, [unavailableVehicleIds, vehicleId]);
 
     const isFormValid = useMemo(() => {
         const customerDetailsValid = customerType === 'existing'
             ? !!selectedCustomerId
-            : customer.firstName && customer.lastName && customer.email && customer.phone &&
-              customer.idCardNumber && customer.driversLicenseNumber;
-
-        return (
-            customerDetailsValid && vehicleId &&
-            startDate && endDate && new Date(startDate) < new Date(endDate)
-        );
+            : customer.first_name && customer.last_name && customer.email && customer.phone &&
+              customer.id_card_number && customer.drivers_license_number;
+        return (customerDetailsValid && vehicleId && startDate && endDate && new Date(startDate) < new Date(endDate));
     }, [customer, vehicleId, startDate, endDate, customerType, selectedCustomerId]);
 
     useEffect(() => {
-        if (!vehicleId || !startDate || !endDate) {
-            setTotalPrice(0);
-            return;
-        }
-
+        if (!vehicleId || !startDate || !endDate) { setTotalPrice(0); return; }
         const start = new Date(startDate);
         const end = new Date(endDate);
-        if (start >= end) {
-            setTotalPrice(0);
-            return;
-        }
-
+        if (start >= end) { setTotalPrice(0); return; }
         const vehicle = vehicles.find(v => v.id === vehicleId);
         if (!vehicle) return;
 
         const durationHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-
         let price = 0;
-        if (durationHours <= 4) {
-            price = vehicle.pricing['4h'];
-        } else if (durationHours <= 6) {
-            price = vehicle.pricing['6h'];
-        } else if (durationHours <= 12) {
-            price = vehicle.pricing['12h'];
-        } else if (durationHours <= 24) {
-            price = vehicle.pricing['24h'];
-        } else {
-            const durationDays = Math.ceil(durationHours / 24);
-            price = durationDays * vehicle.pricing.daily;
-        }
+        if (durationHours <= 4) price = vehicle.pricing['4h'];
+        else if (durationHours <= 6) price = vehicle.pricing['6h'];
+        else if (durationHours <= 12) price = vehicle.pricing['12h'];
+        else if (durationHours <= 24) price = vehicle.pricing['24h'];
+        else price = Math.ceil(durationHours / 24) * vehicle.pricing.daily;
         setTotalPrice(price);
-
     }, [vehicleId, startDate, endDate, vehicles]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!isFormValid) {
-            addToast("Prosím, vyplňte všechna pole správně.", 'error');
-            return;
-        };
+        if (!isFormValid) { addToast("Prosím, vyplňte všechna pole správně.", 'error'); return; }
         
         let customerIdToUse: string;
-
         if (customerType === 'new') {
-            const newCustomer: Customer = { id: `c${new Date().getTime()}`, ...customer };
+            const newCustomer: Customer = { id: `c${Date.now()}`, ...customer };
             setCustomers(prev => [...prev, newCustomer]);
             customerIdToUse = newCustomer.id;
         } else {
@@ -131,7 +101,7 @@ const NewRentalForm: React.FC<NewRentalFormProps> = ({ onSave, onCancel }) => {
         }
 
         const newRental: Rental = {
-            id: `r${new Date().getTime()}`,
+            id: `r${Date.now()}`,
             customerId: customerIdToUse,
             vehicleId,
             startDate,
@@ -146,8 +116,9 @@ const NewRentalForm: React.FC<NewRentalFormProps> = ({ onSave, onCancel }) => {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
+        <Modal isOpen={true} onClose={onCancel} title="Vytvořit novou rezervaci">
+            <form onSubmit={handleSubmit} className="space-y-6">
+                 <div>
                 <h3 className="text-lg font-semibold text-text-primary mb-3">Údaje o zákazníkovi</h3>
                 <div className="flex gap-2 mb-4">
                     <button type="button" onClick={() => setCustomerType('new')} className={`px-4 py-2 text-sm rounded-md transition-colors ${customerType === 'new' ? 'bg-accent text-white' : 'bg-gray-700 text-text-secondary hover:bg-gray-600'}`}>Nový zákazník</button>
@@ -156,18 +127,18 @@ const NewRentalForm: React.FC<NewRentalFormProps> = ({ onSave, onCancel }) => {
 
                 {customerType === 'new' ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input label="Jméno" name="firstName" value={customer.firstName} onChange={handleCustomerChange} required />
-                        <Input label="Příjmení" name="lastName" value={customer.lastName} onChange={handleCustomerChange} required />
+                        <Input label="Jméno" name="first_name" value={customer.first_name} onChange={handleCustomerChange} required />
+                        <Input label="Příjmení" name="last_name" value={customer.last_name} onChange={handleCustomerChange} required />
                         <Input label="Email" name="email" type="email" value={customer.email} onChange={handleCustomerChange} required />
                         <Input label="Telefon" name="phone" type="tel" value={customer.phone} onChange={handleCustomerChange} required />
-                        <Input label="Číslo OP" name="idCardNumber" value={customer.idCardNumber} onChange={handleCustomerChange} required />
-                        <Input label="Číslo ŘP" name="driversLicenseNumber" value={customer.driversLicenseNumber} onChange={handleCustomerChange} required />
+                        <Input label="Číslo OP" name="id_card_number" value={customer.id_card_number} onChange={handleCustomerChange} required />
+                        <Input label="Číslo ŘP" name="drivers_license_number" value={customer.drivers_license_number} onChange={handleCustomerChange} required />
                     </div>
                 ) : (
                     <div>
                         <Select label="Vyberte zákazníka" value={selectedCustomerId} onChange={e => setSelectedCustomerId(e.target.value)} required>
                             <option value="">-- Vyberte --</option>
-                            {customers.map(c => <option key={c.id} value={c.id}>{c.firstName} {c.lastName} ({c.email})</option>)}
+                            {customers.map(c => <option key={c.id} value={c.id}>{c.first_name} {c.last_name} ({c.email})</option>)}
                         </Select>
                     </div>
                 )}
@@ -180,26 +151,21 @@ const NewRentalForm: React.FC<NewRentalFormProps> = ({ onSave, onCancel }) => {
                         {vehicles.map(v => {
                             const isUnavailable = unavailableVehicleIds.has(v.id);
                             return <option key={v.id} value={v.id} disabled={isUnavailable}>
-                                {v.brand} - {v.licensePlate} {isUnavailable ? '(Obsazeno)' : ''}
+                                {v.brand} - {v.license_plate} {isUnavailable ? '(Obsazeno)' : ''}
                             </option>
                         })}
                     </Select>
                     <Input label="Začátek pronájmu" type="datetime-local" value={startDate} onChange={e => setStartDate(e.target.value)} required />
                     <Input label="Konec pronájmu" type="datetime-local" value={endDate} onChange={e => setEndDate(e.target.value)} required />
-                    <Input
-                        label="Celková cena (Kč)"
-                        type="number"
-                        value={totalPrice}
-                        onChange={(e) => setTotalPrice(Number(e.target.value))}
-                        required
-                    />
+                    <Input label="Celková cena (Kč)" type="number" value={totalPrice} onChange={(e) => setTotalPrice(Number(e.target.value))} required />
                 </div>
             </div>
              <div className="flex justify-end gap-4 pt-6 border-t border-gray-700">
                 <Button type="button" variant="secondary" onClick={onCancel}>Zrušit</Button>
-                <Button type="submit" disabled={!isFormValid}>Vytvořit rezervaci a smlouvu</Button>
+                <Button type="submit" disabled={!isFormValid}>Vytvořit rezervaci</Button>
             </div>
-        </form>
+            </form>
+        </Modal>
     );
 };
 

@@ -1,19 +1,18 @@
 import React, { useState } from 'react';
+import { useData } from '../context/DataContext';
 import { Button, Card, Input } from './ui';
+import { useNavigate } from 'react-router-dom';
 
-interface LoginProps {
-    onLogin: () => void;
-}
-
-const Login: React.FC<LoginProps> = ({ onLogin }) => {
-    const [email, setEmail] = useState('');
+const Login: React.FC = () => {
     const [password, setPassword] = useState('');
+    const { login } = useData();
+    const navigate = useNavigate();
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // In a real app, you'd validate credentials here.
-        // For this demo, we'll just log in.
-        onLogin();
+        if (login(password)) {
+            navigate('/');
+        }
     };
 
     return (
@@ -22,17 +21,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 <form onSubmit={handleSubmit}>
                     <div className="flex flex-col items-center mb-6">
                         <h1 className="text-2xl font-bold">Rental<span className="text-accent">Manager</span></h1>
-                        <p className="text-text-secondary">Přihlaste se do svého účtu</p>
+                        <p className="text-text-secondary">Zadejte heslo pro přístup</p>
                     </div>
                     <div className="space-y-4">
-                        <Input 
-                            label="Email" 
-                            type="email" 
-                            value={email} 
-                            onChange={(e) => setEmail(e.target.value)} 
-                            placeholder="you@example.com"
-                            required 
-                        />
                         <Input 
                             label="Heslo" 
                             type="password" 
@@ -43,7 +34,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                         />
                     </div>
                     <Button type="submit" className="w-full mt-6">
-                        Přihlásit se
+                        Vstoupit
                     </Button>
                 </form>
             </Card>

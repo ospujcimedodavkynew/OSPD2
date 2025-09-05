@@ -11,21 +11,11 @@ const CalendarView: React.FC = () => {
 
   const monthNames = ["Leden", "Únor", "Březen", "Duben", "Květen", "Červen", "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec"];
 
-  const getDaysInMonth = (year: number, month: number) => {
-    return new Date(year, month + 1, 0).getDate();
-  };
+  const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
 
-  const goToPreviousMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
-  };
-
-  const goToNextMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
-  };
-
-  const goToToday = () => {
-    setCurrentDate(new Date());
-  };
+  const goToPreviousMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+  const goToNextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+  const goToToday = () => setCurrentDate(new Date());
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -39,8 +29,7 @@ const CalendarView: React.FC = () => {
     const isCurrentMonthToday = today.getFullYear() === year && today.getMonth() === month;
 
     return (
-      <div className="grid border-l border-t border-gray-700" style={{ gridTemplateColumns: 'minmax(180px, 1fr) repeat(' + daysInMonth + ', minmax(40px, 1fr))' }}>
-        {/* Header Row */}
+      <div className="grid border-l border-t border-gray-700" style={{ gridTemplateColumns: `minmax(180px, 1fr) repeat(${daysInMonth}, minmax(40px, 1fr))` }}>
         <div className="sticky left-0 bg-surface z-20 font-semibold p-2 border-r border-b border-gray-700 text-text-primary">Vozidlo</div>
         {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => (
           <div key={day} className={`text-center font-semibold p-2 border-r border-b border-gray-700 ${isCurrentMonthToday && day === today.getDate() ? 'bg-accent text-white' : 'text-text-secondary'}`}>
@@ -48,53 +37,45 @@ const CalendarView: React.FC = () => {
           </div>
         ))}
 
-        {/* Vehicle Rows */}
         {vehicles.map(vehicle => (
           <React.Fragment key={vehicle.id}>
             <div className="sticky left-0 bg-surface z-10 p-2 border-r border-b border-gray-700 text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis flex items-center">
               <div>
                 {vehicle.brand}
-                <span className="block text-xs text-gray-400">{vehicle.licensePlate}</span>
+                <span className="block text-xs text-gray-400">{vehicle.license_plate}</span>
               </div>
             </div>
             
-            <div className="col-start-2 relative grid border-b border-gray-700" style={{ gridColumnEnd: 'span ' + daysInMonth, gridTemplateColumns: `repeat(${daysInMonth}, 1fr)` }}>
+            <div className="col-start-2 relative grid border-b border-gray-700" style={{ gridColumnEnd: `span ${daysInMonth}`, gridTemplateColumns: `repeat(${daysInMonth}, 1fr)` }}>
                 {Array.from({ length: daysInMonth }, (_, i) => <div key={i} className="h-14 border-r border-gray-800"></div>)}
                 
-                {rentals
-                    .filter(r => r.vehicleId === vehicle.id)
-                    .map(rental => {
-                        const rentalStart = new Date(rental.startDate);
-                        const rentalEnd = new Date(rental.endDate);
-                        const startOfMonth = new Date(year, month, 1);
-                        const endOfMonth = new Date(year, month, daysInMonth, 23, 59, 59);
+                {rentals.filter(r => r.vehicleId === vehicle.id).map(rental => {
+                    const rentalStart = new Date(rental.startDate);
+                    const rentalEnd = new Date(rental.endDate);
+                    const startOfMonth = new Date(year, month, 1);
+                    const endOfMonth = new Date(year, month, daysInMonth, 23, 59, 59);
 
-                        if (rentalEnd < startOfMonth || rentalStart > endOfMonth) {
-                            return null;
-                        }
+                    if (rentalEnd < startOfMonth || rentalStart > endOfMonth) return null;
 
-                        const effectiveStart = rentalStart < startOfMonth ? startOfMonth : rentalStart;
-                        const effectiveEnd = rentalEnd > endOfMonth ? endOfMonth : rentalEnd;
-                        
-                        const startDay = effectiveStart.getDate();
-                        const endDay = effectiveEnd.getDate();
+                    const effectiveStart = rentalStart < startOfMonth ? startOfMonth : rentalStart;
+                    const effectiveEnd = rentalEnd > endOfMonth ? endOfMonth : rentalEnd;
+                    const startDay = effectiveStart.getDate();
+                    const duration = Math.ceil((effectiveEnd.getTime() - effectiveStart.getTime()) / (1000 * 3600 * 24));
+                    
+                    const customer = customers.find(c => c.id === rental.customerId);
 
-                        const customer = customers.find(c => c.id === rental.customerId);
-
-                        return (
-                            <div
-                                key={rental.id}
-                                className="bg-primary hover:bg-primary-focus cursor-pointer rounded my-2 mx-px p-1 text-white text-xs overflow-hidden whitespace-nowrap flex items-center z-10"
-                                style={{
-                                    gridColumn: `${startDay} / ${endDay + 1}`,
-                                }}
-                                onClick={() => setSelectedRental(rental)}
-                                title={`${customer?.firstName} ${customer?.lastName} (${rentalStart.toLocaleDateString('cs-CZ')} - ${rentalEnd.toLocaleDateString('cs-CZ')})`}
-                            >
-                                <p className="truncate pl-1">{customer?.firstName} {customer?.lastName}</p>
-                            </div>
-                        );
-                    })}
+                    return (
+                        <div
+                            key={rental.id}
+                            className="bg-primary hover:bg-primary-focus cursor-pointer rounded my-2 mx-px p-1 text-white text-xs overflow-hidden whitespace-nowrap flex items-center z-10"
+                            style={{ gridColumn: `${startDay} / span ${duration}` }}
+                            onClick={() => setSelectedRental(rental)}
+                            title={`${customer?.first_name} ${customer?.last_name}`}
+                        >
+                            <p className="truncate pl-1">{customer?.first_name} {customer?.last_name}</p>
+                        </div>
+                    );
+                })}
             </div>
           </React.Fragment>
         ))}

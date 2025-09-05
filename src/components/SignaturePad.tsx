@@ -23,7 +23,7 @@ const SignaturePad = forwardRef<SignaturePadRef, {}>((_, ref) => {
     
     context.scale(ratio, ratio);
     context.lineCap = 'round';
-    context.strokeStyle = 'white';
+    context.strokeStyle = 'black'; // Black signature on light background
     context.lineWidth = 2;
     contextRef.current = context;
   }, []);
@@ -54,10 +54,7 @@ const SignaturePad = forwardRef<SignaturePadRef, {}>((_, ref) => {
   const draw = (event: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawing.current) return;
     const nativeEvent = event.nativeEvent;
-    // prevent scrolling while drawing on touch devices
-    if ('touches' in nativeEvent) {
-        event.preventDefault();
-    }
+    if ('touches' in nativeEvent) event.preventDefault();
     const coords = getCoords('touches' in nativeEvent ? nativeEvent.touches[0] : nativeEvent);
     contextRef.current?.lineTo(coords.offsetX, coords.offsetY);
     contextRef.current?.stroke();
@@ -74,12 +71,10 @@ const SignaturePad = forwardRef<SignaturePadRef, {}>((_, ref) => {
     getSignature: () => {
         const canvas = canvasRef.current;
         if (!canvas) return undefined;
-        // Check if canvas is empty
         const context = canvas.getContext('2d');
         if(!context) return undefined;
         const pixelBuffer = new Uint32Array(context.getImageData(0, 0, canvas.width, canvas.height).data.buffer);
         const isEmpty = !pixelBuffer.some(color => color !== 0);
-
         return isEmpty ? undefined : canvas.toDataURL('image/png');
     },
   }));
@@ -94,7 +89,7 @@ const SignaturePad = forwardRef<SignaturePadRef, {}>((_, ref) => {
       onTouchStart={startDrawing}
       onTouchEnd={finishDrawing}
       onTouchMove={draw}
-      className="bg-gray-800 border border-gray-600 rounded-md w-full max-w-sm h-32 cursor-crosshair touch-none"
+      className="bg-gray-100 border border-gray-400 rounded-md w-full max-w-sm h-32 cursor-crosshair touch-none"
     />
   );
 });
