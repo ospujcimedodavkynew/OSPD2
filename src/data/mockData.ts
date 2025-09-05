@@ -3,42 +3,33 @@ import type { Vehicle, Customer, Rental } from '../types';
 export const mockVehicles: Vehicle[] = [
   {
     id: 'v1',
-    brand: 'Renault Master',
-    licensePlate: '1AB 1234',
-    vin: 'VF1MA000000000001',
+    brand: 'Ford Transit',
+    model: 'L3H2',
     year: 2022,
-    lastServiceDate: '2024-05-15',
-    lastServiceCost: 5000,
-    stkDate: '2026-04-20',
-    insuranceInfo: 'ČSOB Pojišťovna, pol. 123456789',
-    vignetteUntil: '2025-01-31',
-    pricing: { '4h': 800, '6h': 1000, '12h': 1200, '24h': 1500, daily: 1300 },
+    licensePlate: '5B2 1234',
+    vin: 'WF0XXXTTGXGA12345',
+    status: 'available',
+    pricing: { '4h': 700, '6h': 900, '12h': 1100, '24h': 1300, daily: 1300 },
   },
   {
     id: 'v2',
-    brand: 'Opel Movano',
-    licensePlate: '2BC 5678',
-    vin: 'W0V00000000000002',
+    brand: 'Mercedes-Benz Sprinter',
+    model: '316 CDI',
     year: 2021,
-    lastServiceDate: '2024-03-10',
-    lastServiceCost: 4500,
-    stkDate: '2025-08-10',
-    insuranceInfo: 'Generali, pol. 987654321',
-    vignetteUntil: '2025-06-30',
-    pricing: { '4h': 850, '6h': 1050, '12h': 1250, '24h': 1550, daily: 1350 },
+    licensePlate: '3E9 5678',
+    vin: 'WDB9066351N123456',
+    status: 'available',
+    pricing: { '4h': 800, '6h': 1000, '12h': 1300, '24h': 1500, daily: 1500 },
   },
-   {
+  {
     id: 'v3',
-    brand: 'Fiat Ducato',
-    licensePlate: '3CD 9012',
-    vin: 'ZFA25000000000003',
+    brand: 'Renault Master',
+    model: 'L2H2',
     year: 2023,
-    lastServiceDate: '2024-06-01',
-    lastServiceCost: 6000,
-    stkDate: '2027-02-15',
-    insuranceInfo: 'Allianz, pol. 112233445',
-    vignetteUntil: '2025-03-31',
-    pricing: { '4h': 900, '6h': 1100, '12h': 1300, '24h': 1600, daily: 1400 },
+    licensePlate: '1AD 9012',
+    vin: 'VF1MA0H0G12345678',
+    status: 'rented',
+    pricing: { '4h': 750, '6h': 950, '12h': 1200, '24h': 1400, daily: 1400 },
   },
 ];
 
@@ -50,7 +41,7 @@ export const mockCustomers: Customer[] = [
     email: 'jan.novak@example.com',
     phone: '+420 123 456 789',
     idCardNumber: '123456789',
-    driversLicenseNumber: '987654321',
+    driversLicenseNumber: 'C98765432',
   },
   {
     id: 'c2',
@@ -58,48 +49,38 @@ export const mockCustomers: Customer[] = [
     lastName: 'Svobodová',
     email: 'petra.svobodova@example.com',
     phone: '+420 987 654 321',
-    idCardNumber: '112233445',
-    driversLicenseNumber: '554433221',
+    idCardNumber: '987654321',
+    driversLicenseNumber: 'D12345678',
   },
 ];
 
-const today = new Date();
-const tomorrow = new Date();
-tomorrow.setDate(today.getDate() + 2);
-const nextWeek = new Date();
-nextWeek.setDate(today.getDate() + 7);
-const yesterday = new Date();
-yesterday.setDate(today.getDate() - 1);
-const lastWeek = new Date();
-lastWeek.setDate(today.getDate() - 7);
-
-
+const now = new Date();
 export const mockRentals: Rental[] = [
   {
     id: 'r1',
-    vehicleId: 'v1',
     customerId: 'c1',
-    startDate: yesterday.toISOString().slice(0, 16),
-    endDate: tomorrow.toISOString().slice(0, 16),
-    totalPrice: 3 * 1300,
+    vehicleId: 'v3',
+    startDate: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 2, 10).toISOString(),
+    endDate: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 18).toISOString(),
+    totalPrice: 3 * 1400,
     status: 'active',
   },
   {
     id: 'r2',
-    vehicleId: 'v2',
     customerId: 'c2',
-    startDate: new Date(new Date().setDate(new Date().getDate() + 5)).toISOString().slice(0, 16),
-    endDate: new Date(new Date().setDate(new Date().getDate() + 8)).toISOString().slice(0, 16),
-    totalPrice: 3 * 1350,
-    status: 'upcoming',
+    vehicleId: 'v1',
+    startDate: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 10, 9).toISOString(),
+    endDate: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7, 12).toISOString(),
+    totalPrice: 3 * 1300,
+    status: 'completed',
   },
   {
     id: 'r3',
-    vehicleId: 'v1',
-    customerId: 'c2',
-    startDate: lastWeek.toISOString().slice(0, 16),
-    endDate: yesterday.toISOString().slice(0, 16),
-    totalPrice: 6 * 1300,
-    status: 'completed',
+    customerId: 'c1',
+    vehicleId: 'v2',
+    startDate: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 5, 14).toISOString(),
+    endDate: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 8, 14).toISOString(),
+    totalPrice: 3 * 1500,
+    status: 'upcoming',
   },
 ];

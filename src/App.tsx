@@ -1,131 +1,85 @@
 import React, { useState } from 'react';
-import { Routes, Route, NavLink, useLocation } from 'react-router-dom';
+import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import Dashboard from './components/Dashboard';
 import Fleet from './components/Fleet';
 import Rentals from './components/Rentals';
 import CalendarView from './components/CalendarView';
 import Settings from './components/Settings';
+import Login from './components/Login';
+import ProtectedRoute from './components/ProtectedRoute';
 import { ToastContainer } from './components/ui';
-import { HomeIcon, TruckIcon, FileTextIcon, MenuIcon, XIcon, CalendarDaysIcon, SettingsIcon } from './components/Icons';
+import { LayoutDashboardIcon, CarIcon, FileTextIcon, CalendarDaysIcon, SettingsIcon, LogOutIcon } from './components/Icons';
 
 const App: React.FC = () => {
-  const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const location = useLocation();
+    const [isAuthenticated, setIsAuthenticated] = useState(true); // Default to true for development
+    const location = useLocation();
 
-  const getPageTitle = () => {
-    switch (location.pathname) {
-      case '/':
-        return 'Nástěnka';
-      case '/fleet':
-        return 'Správa Vozového Parku';
-      case '/rentals':
-        return 'Archiv Smluv a Pronájmů';
-      case '/calendar':
-        return 'Kalendář a Plánovač';
-      case '/settings':
-        return 'Nastavení';
-      default:
-        return 'Půjčovna Dodávek';
+    const handleLogout = () => {
+        setIsAuthenticated(false);
+    };
+
+    if (!isAuthenticated) {
+        return (
+            <Routes>
+                <Route path="/login" element={<Login onLogin={() => setIsAuthenticated(true)} />} />
+                <Route path="*" element={<Navigate to="/login" />} />
+            </Routes>
+        );
     }
-  };
-
-  const navLinkClasses = "flex items-center px-4 py-3 text-lg font-medium rounded-lg transition-colors";
-  const activeNavLinkClasses = "bg-accent text-white";
-  const inactiveNavLinkClasses = "text-text-secondary hover:bg-surface hover:text-white";
-
-  const sidebarContent = (
-    <nav className="flex flex-col gap-4 p-4">
-      <NavLink
-        to="/"
-        className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : inactiveNavLinkClasses}`}
-        onClick={() => setSidebarOpen(false)}
-      >
-        <HomeIcon className="w-6 h-6 mr-3" />
-        Nástěnka
-      </NavLink>
-      <NavLink
-        to="/fleet"
-        className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : inactiveNavLinkClasses}`}
-        onClick={() => setSidebarOpen(false)}
-      >
-        <TruckIcon className="w-6 h-6 mr-3" />
-        Vozový Park
-      </NavLink>
-       <NavLink
-        to="/calendar"
-        className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : inactiveNavLinkClasses}`}
-        onClick={() => setSidebarOpen(false)}
-      >
-        <CalendarDaysIcon className="w-6 h-6 mr-3" />
-        Kalendář
-      </NavLink>
-      <NavLink
-        to="/rentals"
-        className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : inactiveNavLinkClasses}`}
-        onClick={() => setSidebarOpen(false)}
-      >
-        <FileTextIcon className="w-6 h-6 mr-3" />
-        Smlouvy
-      </NavLink>
-      <NavLink
-        to="/settings"
-        className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : inactiveNavLinkClasses}`}
-        onClick={() => setSidebarOpen(false)}
-      >
-        <SettingsIcon className="w-6 h-6 mr-3" />
-        Nastavení
-      </NavLink>
-    </nav>
-  );
-
-  return (
-    <div className="flex h-screen bg-background text-text-primary">
-      <ToastContainer />
-      {/* Static Sidebar for larger screens */}
-      <aside className="hidden md:flex w-64 flex-col bg-gray-900 border-r border-gray-700">
-        <div className="flex items-center justify-center h-20 border-b border-gray-700">
-          <h1 className="text-2xl font-bold text-white">Půjčovna</h1>
+    
+    const navItems = [
+        { path: '/', label: 'Dashboard', icon: LayoutDashboardIcon },
+        { path: '/fleet', label: 'Vozový park', icon: CarIcon },
+        { path: '/rentals', label: 'Pronájmy', icon: FileTextIcon },
+        { path: '/calendar', label: 'Kalendář', icon: CalendarDaysIcon },
+        { path: '/settings', label: 'Nastavení', icon: SettingsIcon },
+    ];
+    
+    return (
+        <div className="flex h-screen bg-background text-text-primary">
+            <aside className="w-64 bg-surface flex flex-col">
+                <div className="h-16 flex items-center justify-center text-xl font-bold border-b border-gray-700">
+                    Rental<span className="text-accent">Manager</span>
+                </div>
+                <nav className="flex-1 px-4 py-6 space-y-2">
+                    {navItems.map(item => {
+                        const Icon = item.icon;
+                        const isActive = location.pathname === item.path;
+                        return (
+                            <Link 
+                                key={item.path} 
+                                to={item.path} 
+                                className={`flex items-center px-4 py-2 rounded-md transition-colors ${
+                                    isActive ? 'bg-primary text-white' : 'hover:bg-gray-700'
+                                }`}
+                            >
+                                <Icon className="w-5 h-5 mr-3" />
+                                {item.label}
+                            </Link>
+                        );
+                    })}
+                </nav>
+                <div className="p-4 border-t border-gray-700">
+                    <button onClick={handleLogout} className="flex items-center w-full px-4 py-2 rounded-md text-left hover:bg-gray-700">
+                        <LogOutIcon className="w-5 h-5 mr-3" />
+                        Odhlásit se
+                    </button>
+                </div>
+            </aside>
+            <main className="flex-1 p-8 overflow-y-auto">
+                <Routes>
+                    <Route path="/" element={<ProtectedRoute isAuthenticated={isAuthenticated}><Dashboard /></ProtectedRoute>} />
+                    <Route path="/fleet" element={<ProtectedRoute isAuthenticated={isAuthenticated}><Fleet /></ProtectedRoute>} />
+                    <Route path="/rentals" element={<ProtectedRoute isAuthenticated={isAuthenticated}><Rentals /></ProtectedRoute>} />
+                    <Route path="/calendar" element={<ProtectedRoute isAuthenticated={isAuthenticated}><CalendarView /></ProtectedRoute>} />
+                    <Route path="/settings" element={<ProtectedRoute isAuthenticated={isAuthenticated}><Settings /></ProtectedRoute>} />
+                    <Route path="/login" element={<Navigate to="/" />} />
+                    <Route path="*" element={<Navigate to="/" />} />
+                </Routes>
+            </main>
+            <ToastContainer />
         </div>
-        {sidebarContent}
-      </aside>
-
-      {/* Mobile Sidebar */}
-      <div className={`fixed inset-0 z-30 transition-transform transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:hidden`}>
-          <div className="relative w-64 h-full bg-gray-900 shadow-lg">
-              <div className="flex items-center justify-between h-20 p-4 border-b border-gray-700">
-                <h1 className="text-2xl font-bold text-white">Půjčovna</h1>
-                <button onClick={() => setSidebarOpen(false)} className="text-text-secondary">
-                    <XIcon className="w-6 h-6" />
-                </button>
-              </div>
-              {sidebarContent}
-          </div>
-          <div className="fixed inset-0 bg-black opacity-50" onClick={() => setSidebarOpen(false)}></div>
-      </div>
-
-
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="flex items-center justify-between h-20 px-6 bg-surface border-b border-gray-700">
-          <button onClick={() => setSidebarOpen(true)} className="md:hidden text-text-secondary">
-            <MenuIcon className="w-6 h-6" />
-          </button>
-          <h2 className="text-2xl font-semibold">{getPageTitle()}</h2>
-          <div>
-            {/* User profile or other header items can go here */}
-          </div>
-        </header>
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background p-6">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/fleet" element={<Fleet />} />
-            <Route path="/rentals" element={<Rentals />} />
-            <Route path="/calendar" element={<CalendarView />} />
-            <Route path="/settings" element={<Settings />} />
-          </Routes>
-        </main>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default App;

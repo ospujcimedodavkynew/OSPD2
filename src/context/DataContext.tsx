@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 import type { Vehicle, Customer, Rental, ToastMessage } from '../types';
 import { mockVehicles, mockCustomers, mockRentals } from '../data/mockData';
 
@@ -9,45 +9,63 @@ interface DataContextType {
   setCustomers: React.Dispatch<React.SetStateAction<Customer[]>>;
   rentals: Rental[];
   setRentals: React.Dispatch<React.SetStateAction<Rental[]>>;
-  bankAccountNumber: string;
-  setBankAccountNumber: React.Dispatch<React.SetStateAction<string>>;
   toasts: ToastMessage[];
   addToast: (message: string, type: ToastMessage['type']) => void;
   removeToast: (id: number) => void;
+  bankAccountNumber: string;
+  setBankAccountNumber: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [vehicles, setVehicles] = useState<Vehicle[]>(mockVehicles);
-  const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
-  const [rentals, setRentals] = useState<Rental[]>(mockRentals);
-  const [bankAccountNumber, setBankAccountNumber] = useState('CZ5808000000000123456789'); // Default for demonstration
-  const [toasts, setToasts] = useState<ToastMessage[]>([]);
-
-  const addToast = (message: string, type: ToastMessage['type']) => {
-    const id = new Date().getTime();
-    setToasts(prev => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      removeToast(id);
-    }, 5000);
-  };
-  
-  const removeToast = (id: number) => {
-      setToasts(prev => prev.filter(toast => toast.id !== id));
-  }
-
-  return (
-    <DataContext.Provider value={{ vehicles, setVehicles, customers, setCustomers, rentals, setRentals, bankAccountNumber, setBankAccountNumber, toasts, addToast, removeToast }}>
-      {children}
-    </DataContext.Provider>
-  );
-};
-
-export const useData = (): DataContextType => {
+export const useData = () => {
   const context = useContext(DataContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useData must be used within a DataProvider');
   }
   return context;
+};
+
+interface DataProviderProps {
+  children: ReactNode;
+}
+
+export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
+  const [vehicles, setVehicles] = useState<Vehicle[]>(mockVehicles);
+  const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
+  const [rentals, setRentals] = useState<Rental[]>(mockRentals);
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [bankAccountNumber, setBankAccountNumber] = useState('CZ12 3456 7890 1234 5678 9012');
+
+  const addToast = useCallback((message: string, type: ToastMessage['type']) => {
+    const newToast: ToastMessage = {
+      id: new Date().getTime(),
+      message,
+      type,
+    };
+    setToasts(prevToasts => [...prevToasts, newToast]);
+    setTimeout(() => {
+      setToasts(currentToasts => currentToasts.filter(toast => toast.id !== newToast.id));
+    }, 5000);
+  }, []);
+
+  const removeToast = useCallback((id: number) => {
+    setToasts(prevToasts => prevToasts.filter(toast => toast.id !== id));
+  }, []);
+
+  const value = {
+    vehicles,
+    setVehicles,
+    customers,
+    setCustomers,
+    rentals,
+    setRentals,
+    toasts,
+    addToast,
+    removeToast,
+    bankAccountNumber,
+    setBankAccountNumber
+  };
+
+  return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 };

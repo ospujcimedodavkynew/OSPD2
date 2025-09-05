@@ -1,20 +1,18 @@
+// src/types.ts
 export interface Vehicle {
   id: string;
-  brand: 'Renault Master' | 'Opel Movano' | 'Fiat Ducato' | 'Peugeot Boxer' | 'Mercedes Sprinter';
+  brand: string;
+  model: string;
+  year: number;
   licensePlate: string;
   vin: string;
-  year: number;
-  lastServiceDate: string;
-  lastServiceCost: number;
-  stkDate: string;
-  insuranceInfo: string;
-  vignetteUntil: string;
+  status: 'available' | 'rented' | 'maintenance';
   pricing: {
     '4h': number;
     '6h': number;
     '12h': number;
     '24h': number;
-    daily: number; // for > 24h
+    daily: number;
   };
 }
 
@@ -30,10 +28,10 @@ export interface Customer {
 
 export interface Rental {
   id: string;
-  vehicleId: string;
   customerId: string;
-  startDate: string;
-  endDate: string;
+  vehicleId: string;
+  startDate: string; // ISO string
+  endDate: string; // ISO string
   totalPrice: number;
   status: 'active' | 'completed' | 'upcoming';
 }
